@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>先進封裝入門知識 — 個人論文知識庫簡報</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f9fafb;
+      --ink: #111827;
+      --muted: #4b5563;
+      --subtle: #6b7280;
+      --border: #e5e7eb;
+      --accent: #1e3a8a;
+      --accent-soft: #eff6ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f3f4f6;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      line-height: 1.6;
+    }
+
+    /* Top Minimal Toolbar */
+    .topbar {
+      width: 100%;
+      max-width: 1120px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      display: inline-block;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background-color: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .counter {
+      font-size: 13px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    /* 16:9 Stage */
+    .stage {
+      width: 100%;
+      max-width: 1120px;
+      aspect-ratio: 16 / 9;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(17, 24, 39, 0.04);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      padding: 40px 52px 28px;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    .slide-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    .slide-kicker {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .slide-title {
+      font-size: clamp(20px, 2.4vw, 28px);
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      font-size: clamp(13.5px, 1.25vw, 15.5px);
+    }
+
+    .lead-box {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      color: var(--ink);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    ul.clean-list, ol.clean-list {
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    ul.clean-list li, ol.clean-list li {
+      color: var(--ink);
+    }
+
+    .highlight {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(12px, 1.1vw, 13.5px);
+      text-align: left;
+    }
+
+    th {
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 600;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--ink);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Cover Slide */
+    .cover-wrap {
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .cover-title {
+      font-size: clamp(26px, 3.2vw, 38px);
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .cover-sub {
+      font-size: clamp(15px, 1.5vw, 19px);
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .cover-meta {
+      display: inline-block;
+      font-size: 13px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    /* Footer */
+    .slide-footer {
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--subtle);
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--surface);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.2s ease;
+    }
+
+    /* TOC Drawer */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.25);
+      display: none;
+      justify-content: flex-end;
+      z-index: 50;
+    }
+
+    .drawer-backdrop.open {
+      display: flex;
+    }
+
+    .drawer {
+      width: 340px;
+      max-width: 90vw;
+      background: var(--bg);
+      height: 100%;
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .toc-item {
+      text-align: left;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .toc-item:hover, .toc-item.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .toc-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    .toc-label {
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .stage {
+        aspect-ratio: auto;
+        min-height: 72vh;
+      }
+      .slide {
+        padding: 24px 20px 20px;
+      }
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+        display: block;
+      }
+      .topbar, .progress-track, .drawer-backdrop {
+        display: none !important;
+      }
+      .stage {
+        max-width: none;
+        aspect-ratio: auto;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        min-height: 92vh;
+        border: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>個人論文知識庫｜先進封裝與互連金屬化入門</span>
+    </div>
+    <div class="controls">
+      <button type="button" class="btn" id="btnToc">目錄</button>
+      <button type="button" class="btn" id="btnPrev">← 上一頁</button>
+      <span class="counter" id="slideCounter">1 / 8</span>
+      <button type="button" class="btn" id="btnNext">下一頁 →</button>
+      <button type="button" class="btn" id="btnPrint">列印 / PDF</button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <!-- Slide 1 -->
+    <section class="slide active cover-wrap" data-title="先進封裝入門知識">
+      <div>
+        <div class="cover-meta">適用對象：剛踏入半導體封裝與電鍍／薄膜領域的研究生</div>
+        <h1 class="cover-title" style="margin-top: 16px;">先進封裝入門知識</h1>
+        <p class="cover-sub">從 PCB 微孔電鍍到 3D-IC TSV 濺鍍的物理與製程脈絡</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">01｜理解幾何瓶頸</div>
+          <p>釐清高深寬比微孔「為何鍍不滿、鍍不均」，以及常見空洞缺陷的成因。</p>
+        </div>
+        <div class="card">
+          <div class="card-title">02｜掌握濕製程電鍍</div>
+          <p>認識對流性吸附 (CDA) 與雙平整劑 (NTBC + ABPV) 如何解決盲孔與通孔衝突。</p>
+        </div>
+        <div class="card">
+          <div class="card-title">03｜認識乾製程濺鍍</div>
+          <p>了解 3D-IC TSV 電鍍前的 Ti 阻隔層 PVD 濺鍍，如何靠製程壓力提升覆蓋率。</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[overview]]</code></span>
+        <span>1 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 2 (New Intro to Advanced Packaging) -->
+    <section class="slide" data-title="先進封裝基礎：從 2D 走向 2.5D / 3D IC 與 HDI">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">00｜先進封裝基礎概念</div>
+          <h2 class="slide-title">為何需要先進封裝？從 2D 走向 2.5D / 3D IC 與 HDI</h2>
+        </div>
+        <div class="slide-body">
+          <div class="lead-box">
+            傳統 2D 平面晶片（SoC）與打線接合（Wire Bonding）因導線過長而面臨 <strong>RC 訊號延遲</strong>與空間限制；先進封裝透過「<strong>立體垂直堆疊</strong>」縮短互連距離，兼具小體積、高頻寬與低功耗優勢。
+          </div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-title">3D IC 與 2.5D 轉接板</div>
+              <p>將不同功能晶片以最適製程分開製作後，透過 <strong>TSV（直通矽晶穿孔）</strong>垂直堆疊；2.5D 則先透過矽轉接板（Si Interposer）互連，降低直接加工風險（應用於 CIS、DRAM、MEMS）。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">晶圓級封裝 (WLP / WLCSP)</div>
+              <p>直接在整片晶圓完成封裝與測試後再切割（Singulation），無須打線與填膠，封裝後尺寸等同原晶粒大小，大幅降低每顆元件成本。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">HDI 增層板與銅柱堆疊</div>
+              <p>PCB 從傳統通孔演進至逐次壓合增層法（Build-up），以微盲孔電鍍填實銅柱取代樹脂填塞，解決熱膨脹係數差異並支援疊孔立體配線。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[paper-2012-tsv-ti-sputtering-coverage]]</code>、<code>[[paper-2011-forced-convection-microvia-cu]]</code>、<code>[[paper-2017-one-bath-microvia-pth-cu]]</code></span>
+        <span>2 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 2 -->
+    <section class="slide" data-title="核心痛點：高深寬比微孔的金屬填充難題">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">01｜領域共通痛點</div>
+          <h2 class="slide-title">孔越來越窄深，金屬怎麼送進孔底？</h2>
+        </div>
+        <div class="slide-body">
+          <div class="lead-box">
+            無論是高密度互連 (HDI) 印刷電路板，還是 3D-IC 直通矽晶穿孔 (TSV)，垂直互連結構都朝「<strong>孔徑微縮、深度增加（高深寬比 High Aspect Ratio）</strong>」發展，使離子或原子極難順利抵達孔底。
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">空洞 (Void) — 次保角沉積</div>
+              <p>孔口電流密度與離子補充速度高於孔底，導致孔口銅層率先封閉，把未填滿的空間鎖在內部形成致命空洞缺陷。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">細縫 (Seam) — 保角沉積</div>
+              <p>孔壁與孔底以相同速率向內生長，當兩側鍍層在孔中央相撞時，容易在中央留下垂直縫隙，影響電性與熱信賴度。</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">核心工程目標：孔底上移超填充 (Bottom-Up Superfilling)</div>
+            <p>必須透過流場與化學或電漿調控，讓「<strong>孔底的沉積速率遠大於孔口與板面</strong>」，使金屬由下往上無空洞填平。</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[overview]]</code>、<code>[[concept-bottom-up-superfilling]]</code></span>
+        <span>3 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 3 -->
+    <section class="slide" data-title="濕製程秘密武器：對流性吸附機構 (CDA)">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">02｜電鍍化學與流場分工</div>
+          <h2 class="slide-title">濕製程秘密武器：對流性吸附機構 (CDA)</h2>
+        </div>
+        <div class="slide-body">
+          <div class="lead-box">
+            抑制劑聚乙二醇 (PEG) 必須透過<strong>氯離子 ($\text{Cl}^-$)</strong> 作為橋樑才能吸附在陰極銅面阻擋沉積；但 $\text{Cl}^-$ 帶負電，會受到陰極排斥而脫附，因此需要靠「強制對流」製造區域分工。
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>區域位置</th>
+                  <th>流體對流強度</th>
+                  <th>$\text{Cl}^-$ 覆蓋狀態</th>
+                  <th>添加劑主導反應</th>
+                  <th>沉積速率結果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>板面與孔口</strong></td>
+                  <td>強對流（動能充足）</td>
+                  <td>$\text{Cl}^-$ 克服陰極排斥、穩定吸附</td>
+                  <td>促進 PEG 與平整劑形成阻擋膜</td>
+                  <td><span class="highlight">抑制沉積</span>（避免孔口封死）</td>
+                </tr>
+                <tr>
+                  <td><strong>盲孔底部與角落</strong></td>
+                  <td>弱對流（流體難進入）</td>
+                  <td>$\text{Cl}^-$ 難以補充、濃度極低</td>
+                  <td>加速劑 SPS / MPS 佔據優勢</td>
+                  <td><span class="highlight">加速沉積</span>（實現孔底上移）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[concept-convection-dependent-adsorption]]</code></span>
+        <span>4 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 4 -->
+    <section class="slide" data-title="只靠加速攪拌行嗎？流體力學的物理極限">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">03｜數值模擬與物理極限</div>
+          <h2 class="slide-title">只靠加速攪拌行嗎？流體力學的物理極限</h2>
+        </div>
+        <div class="slide-body">
+          <div class="lead-box">
+            許家福 (2011) 以 COMSOL 建立 2D 穩態層流耦合模型（Navier-Stokes + Nernst-Planck + Butler-Volmer），掃描入口流速 $0.03\text{--}0.12\text{ m/s}$、孔徑與孔深 $60\text{--}120\ \mu\text{m}$。
+          </div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-title">1. 縱橫比門檻 ($\text{AR} \ge 1.2$)</div>
+              <p>流體慣性力無法克服孔壁黏滯力，渦流進不了孔底：孔底／孔外 $\text{Cu}^{2+}$ 通量比 $&lt; 0.1$；$\text{AR} \ge 1.25$ 時 $\text{Cl}^-$ 通量比更 $&lt; 0.001$。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">2. 流速增益遞減</div>
+              <p>孔外 $\text{Cl}^-$ 通量在 $0.03 \to 0.06\text{ m/s}$ 提升 $29.32\%$，但拉高至 $0.09 \to 0.12\text{ m/s}$ 時僅提升 $12.96\%$（對流推力與靜電排斥達平衡）。</p>
+            </div>
+            <div class="card">
+              <div class="card-title">3. 傾斜側壁的反效果</div>
+              <p>將盲孔側壁改為傾斜 $5^\circ$（$95^\circ$ 開口），反而削弱孔內渦流向下傳遞，使孔底 $\text{Cu}^{2+}$ 與 $\text{Cl}^-$ 通量<strong>降低 $5\text{--}10\%$</strong>。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[paper-2011-forced-convection-microvia-cu]]</code></span>
+        <span>5 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 5 -->
+    <section class="slide" data-title="工程實戰：盲孔 vs. 通孔衝突與同鍍槽解法">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">04｜雙平整劑與同鍍槽整合</div>
+          <h2 class="slide-title">工程實戰：盲孔 vs. 通孔衝突與同鍍槽解法</h2>
+        </div>
+        <div class="slide-body">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">為何原本無法同槽？（配方衝突）</div>
+              <ul class="clean-list">
+                <li><strong>純盲孔配方</strong>（$0.88\text{ M CuSO}_4 + 0.54\text{ M H}_2\text{SO}_4$）：盲孔填孔率 $\text{FP} = 97\%$，但鍍通孔均擲力 $\text{TP}$ 僅 <strong>$60\%$</strong>。</li>
+                <li><strong>純通孔配方</strong>（$0.24\text{ M CuSO}_4 + 1.88\text{ M H}_2\text{SO}_4$）：通孔 $\text{TP} = 104\%$，但鍍盲孔 $\text{FP}$ 僅 <strong>$10\%$</strong>。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-title">同鍍槽三大關鍵解法（許家福 2017）</div>
+              <ol class="clean-list">
+                <li><strong>雙平整劑協同</strong>：單純 <code>PEG-Cl-SPS</code> 之 CDA 電位差 $\Delta\eta = 0\text{ mV}$；併用 <code>1 ppm NTBC + 1 ppm ABPV</code> 放大至 <strong>$25\text{ mV}$</strong>（NTBC 加速孔底、ABPV 修飾平坦輪廓）。</li>
+                <li><strong>空氣曝氣攪拌</strong>：製造週期性反轉軸向流，解決陰極旋轉兩側等壓無對流問題（覆蓋率差異 $\Delta\theta \approx 0.08$）。</li>
+                <li><strong>折衷酸銅比達標</strong>：$0.72\text{ M CuSO}_4 + 1.32\text{ M H}_2\text{SO}_4 + 1.5\text{ ppm SPS}$ 於 $1.29\text{ A/dm}^2$ 電鍍 $90\text{ min}$，同步達成 <strong>$\text{FP} = 90\%$（$\phi 95\ \mu\text{m}$）</strong> 與 <strong>$\text{TP} = 83\%$（$\phi 250\ \mu\text{m}$）</strong>。</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[paper-2017-one-bath-microvia-pth-cu]]</code>、<code>[[compare-microvia-vs-pth-plating]]</code></span>
+        <span>6 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 6 -->
+    <section class="slide" data-title="跨向 3D-IC：TSV 電鍍前的乾製程 PVD 濺鍍">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">05｜3D-IC 前置成膜製程</div>
+          <h2 class="slide-title">跨向 3D-IC：TSV 電鍍前的乾製程 PVD 濺鍍</h2>
+        </div>
+        <div class="slide-body">
+          <div class="lead-box">
+            TSV 電鍍填銅前須先濺鍍 Ti 阻隔層與 Cu 種子層，但中性濺鍍粒子呈「直線飛行」，易被 Bosch 蝕刻產生的扇貝狀 (Scallop) 側壁遮蔽。關鍵指標為底部階梯覆蓋率 $\text{B.S.C.} = \frac{b}{t} \times 100\%$（孔底夠厚，第二階段反濺鍍才能將 Ti 打上側壁）。
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>製程參數（江宗憲 2012）</th>
+                  <th>AR 1.5（$80\ \mu\text{m} \times 120\ \mu\text{m}$）</th>
+                  <th>AR 5.0（$30\ \mu\text{m} \times 150\ \mu\text{m}$）</th>
+                  <th>物理機制結論</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>製程壓力（最大關鍵）</strong></td>
+                  <td>$0.7 \to 15.0\text{ mTorr}$：B.S.C. <span class="highlight">$19.4\% \to 52.1\%$</span></td>
+                  <td>$1.4 \to 50.0\text{ mTorr}$：B.S.C. <span class="highlight">$7.4\% \to 15.8\%$</span></td>
+                  <td>高壓增加碰撞，使 $\text{Ti}^+$ 離子化率從 $5\text{--}10\%$ 升至 $\sim 30\%$</td>
+                </tr>
+                <tr>
+                  <td><strong>載盤 RF Bias</strong></td>
+                  <td>$0 \to 50 \to 500\text{ W}$：$18.4\% \to 44.1\% \to 46.1\%$</td>
+                  <td>$0 \to 200 \to 600\text{ W}$：$3.7\% \to 9.2\% \to 10.2\%$</td>
+                  <td>小偏壓即可垂直吸引 $\text{Ti}^+$，過高會達到蝕刻飽和</td>
+                </tr>
+                <tr>
+                  <td><strong>靶材 DC Power</strong></td>
+                  <td>$3 \to 10\text{ kW}$：僅加速沉積（$620 \to 2980\text{ \AA/min}$）</td>
+                  <td>$5 \to 18\text{ kW}$：反使 B.S.C. 略降（$16.3\% \to 12.4\%$）</td>
+                  <td>過高 DC Power 會壓抑載盤偏壓（$206\text{ V} \to 122\text{ V}$）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[concept-step-coverage-tsv]]</code>、<code>[[paper-2012-tsv-ti-sputtering-coverage]]</code></span>
+        <span>7 / 8</span>
+      </div>
+    </section>
+
+    <!-- Slide 7 -->
+    <section class="slide" data-title="新手總結地圖：PCB 濕製程 vs. 3D-IC 乾製程">
+      <div>
+        <div class="slide-header">
+          <div class="slide-kicker">06｜全域對照與思維整理</div>
+          <h2 class="slide-title">新手總結地圖：PCB 濕製程 vs. 3D-IC 乾製程</h2>
+        </div>
+        <div class="slide-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>比較維度</th>
+                  <th>PCB 微盲孔／通孔（濕製程電鍍銅）</th>
+                  <th>3D-IC TSV（乾製程 PVD 濺鍍 Ti）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>製程目的</strong></td>
+                  <td>導體填充（填實盲孔或均勻鍍覆通孔壁）</td>
+                  <td>電鍍前的前置成膜（阻隔層／種子層）</td>
+                </tr>
+                <tr>
+                  <td><strong>孔底輸送瓶頸</strong></td>
+                  <td>孔壁黏滯力阻礙對流（$\text{AR} \ge 1.2$ 渦流進不去），陰極排斥 $\text{Cl}^-$</td>
+                  <td>中性原子直線飛行，大入射角被孔口與 Scallop 側壁遮蔽</td>
+                </tr>
+                <tr>
+                  <td><strong>核心調控槓桿</strong></td>
+                  <td>強制對流（曝氣攪拌）＋ 添加劑競爭吸附（PEG / Cl⁻ / SPS / NTBC / ABPV）</td>
+                  <td><strong>製程壓力</strong>提升氣相離子化率 ＋ <strong>RF Bias</strong> 垂直吸引</td>
+                </tr>
+                <tr>
+                  <td><strong>過量參數的副作用</strong></td>
+                  <td>流速 $&gt; 0.09\text{ m/s}$ 增益遞減；SPS 過量 ($1.5\text{ ppm}$) 造成 Void</td>
+                  <td>DC Power 過高 ($18\text{ kW}$) 壓抑載盤偏壓；RF Bias 過高蝕刻飽和</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Wiki 來源：<code>[[compare-pcb-microvia-vs-3dic-tsv]]</code></span>
+        <span>8 / 8</span>
+      </div>
+    </section>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 12.50%;"></div>
+    </div>
+  </main>
+
+  <!-- TOC Drawer -->
+  <div class="drawer-backdrop" id="drawerBackdrop">
+    <aside class="drawer">
+      <div class="drawer-header">
+        <span>簡報目錄（共 8 頁）</span>
+        <button type="button" class="btn" id="btnCloseToc">關閉</button>
+      </div>
+      <div id="tocList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const total = slides.length;
+      let current = 0;
+
+      const counterEl = document.getElementById('slideCounter');
+      const progressEl = document.getElementById('progressFill');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+      const btnToc = document.getElementById('btnToc');
+      const btnCloseToc = document.getElementById('btnCloseToc');
+      const btnPrint = document.getElementById('btnPrint');
+      const drawerBackdrop = document.getElementById('drawerBackdrop');
+      const tocList = document.getElementById('tocList');
+
+      function buildToc() {
+        tocList.innerHTML = '';
+        slides.forEach((slide, idx) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'toc-item' + (idx === current ? ' active' : '');
+          const num = document.createElement('div');
+          num.className = 'toc-num';
+          num.textContent = 'SLIDE ' + (idx + 1);
+          const label = document.createElement('div');
+          label.className = 'toc-label';
+          label.textContent = slide.getAttribute('data-title') || ('第 ' + (idx + 1) + ' 頁');
+          item.appendChild(num);
+          item.appendChild(label);
+          item.addEventListener('click', () => {
+            goTo(idx);
+            drawerBackdrop.classList.remove('open');
+          });
+          tocList.appendChild(item);
+        });
+      }
+
+      function goTo(index) {
+        if (index < 0 || index >= total) return;
+        slides[current].classList.remove('active');
+        current = index;
+        slides[current].classList.add('active');
+        counterEl.textContent = (current + 1) + ' / ' + total;
+        progressEl.style.width = (((current + 1) / total) * 100).toFixed(2) + '%';
+        btnPrev.disabled = current === 0;
+        btnNext.disabled = current === total - 1;
+        buildToc();
+      }
+
+      btnPrev.addEventListener('click', () => goTo(current - 1));
+      btnNext.addEventListener('click', () => goTo(current + 1));
+      btnToc.addEventListener('click', () => drawerBackdrop.classList.add('open'));
+      btnCloseToc.addEventListener('click', () => drawerBackdrop.classList.remove('open'));
+      drawerBackdrop.addEventListener('click', (e) => {
+        if (e.target === drawerBackdrop) drawerBackdrop.classList.remove('open');
+      });
+      btnPrint.addEventListener('click', () => window.print());
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+          e.preventDefault();
+          goTo(current + 1);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          goTo(current - 1);
+        } else if (e.key === 'Home') {
+          goTo(0);
+        } else if (e.key === 'End') {
+          goTo(total - 1);
+        } else if (e.key === 'Escape') {
+          drawerBackdrop.classList.remove('open');
+        }
+      });
+
+      window.addEventListener('DOMContentLoaded', () => {
+        if (typeof renderMathInElement === 'function') {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+        goTo(0);
+      });
+    })();
+  </script>
+</body>
+</html>
